@@ -23,6 +23,9 @@
         <div class="stats">
           <p class="chip">分数 <span id="score">0</span></p>
           <p class="chip">最高分 <span id="best-score">0</span></p>
+          <p class="chip">波次 <span id="wave">1</span></p>
+          <p class="chip">护盾 <span id="shield-count">0</span></p>
+          <p class="chip">冲刺CD <span id="dash-cooldown">0.0s</span></p>
           <p class="chip">状态 <span id="status">未开始</span></p>
           <button id="pause-btn" type="button" class="pause-btn" disabled>暂停</button>
         </div>
@@ -34,11 +37,15 @@
           aria-label="躲避方块游戏区域"
         >
           <div id="player" class="player" aria-label="玩家"></div>
+          <div id="effect-bar" class="effect-bar">
+            <span id="slow-status" class="effect-chip">减速: 关闭</span>
+            <span id="double-status" class="effect-chip">双倍分: 关闭</span>
+          </div>
 
           <div id="overlay" class="overlay show">
             <p id="overlay-text">按空格开始游戏</p>
             <button id="start-btn" type="button">开始 / 重新开始</button>
-            <small>方向键/WASD 移动，暂停按钮可继续/暂停</small>
+            <small>方向键/WASD 移动，Shift 冲刺，暂停按钮可继续/暂停</small>
           </div>
         </div>
       </section>

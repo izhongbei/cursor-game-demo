@@ -147,6 +147,26 @@ body {
     0 0 26px rgb(255 93 122 / 26%);
 }
 
+.powerup {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgb(255 255 255 / 16%);
+}
+
+.powerup.shield {
+  background: radial-gradient(circle at 30% 30%, #d9f7ff 0%, #64d9ff 60%, #1f86a8 100%);
+}
+
+.powerup.slow {
+  background: radial-gradient(circle at 30% 30%, #daecff 0%, #7e97ff 60%, #3947aa 100%);
+}
+
+.powerup.double {
+  background: radial-gradient(circle at 30% 30%, #fff4d9 0%, #ffce5c 58%, #a9781b 100%);
+}
+
 .pause-btn {
   margin-left: auto;
   border: 1px solid rgb(99 230 255 / 45%);
@@ -162,6 +182,41 @@ body {
 .pause-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(1.08);
+}
+
+.effect-bar {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  display: flex;
+  gap: 8px;
+  z-index: 3;
+}
+
+.effect-chip {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  background: rgb(6 10 24 / 58%);
+  color: #d9e4ff;
+  font-size: 12px;
+}
+
+.effect-chip.active {
+  border-color: rgb(99 230 255 / 55%);
+  box-shadow: 0 0 10px rgb(99 230 255 / 26%);
+}
+
+.player.shielded {
+  box-shadow:
+    0 0 0 3px rgb(99 217 255 / 40%),
+    0 0 18px rgb(102 245 142 / 50%),
+    0 0 34px rgb(102 245 142 / 20%);
+}
+
+.player.dashing {
+  filter: saturate(1.35);
 }
 
 .pause-btn:disabled {
