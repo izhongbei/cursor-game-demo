@@ -206,6 +206,13 @@ function addFloatingText(x, y, text, type = "combo") {
   window.setTimeout(() => el.remove(), 640);
 }
 
+function showShieldTriggerFeedback() {
+  addFloatingText(areaWidth * 0.5, areaHeight * 0.44, "触发护盾!", "shield-trigger");
+  gameArea.classList.remove("shield-flash");
+  void gameArea.offsetWidth;
+  gameArea.classList.add("shield-flash");
+}
+
 function showAchievementToast(text) {
   achievementToastEl.textContent = `成就解锁：${text}`;
   achievementToastEl.classList.add("show");
@@ -626,6 +633,7 @@ function tryConsumeShield() {
   shieldCount -= 1;
   addScreenShake();
   playBeep(240, 0.07, 0.02);
+  showShieldTriggerFeedback();
   return true;
 }
 
