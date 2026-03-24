@@ -48,9 +48,13 @@ const DASH_COOLDOWN = 3.5;
 const MAX_SHIELD_COUNT = 3;
 
 const POWERUP_SIZE = 22;
+const PORTAL_SIZE = 34;
 const POWERUP_LIFETIME = 8;
 const POWERUP_SPAWN_MIN = 7;
 const POWERUP_SPAWN_MAX = 11;
+const PORTAL_SPAWN_MIN = 18;
+const PORTAL_SPAWN_MAX = 28;
+const PORTAL_LIFETIME = 7;
 const SLOW_EFFECT_DURATION = 5;
 const SLOW_EFFECT_MULTIPLIER = 0.55;
 const DOUBLE_SCORE_DURATION = 6;
@@ -90,6 +94,7 @@ let gameState = "idle";
 let player = { x: 0, y: 0, speed: 260 };
 let obstacles = [];
 let powerups = [];
+let portals = [];
 let keys = {};
 let score = 0;
 let bestScore = Number(localStorage.getItem("avoid-block-best-score") || 0);
@@ -101,6 +106,7 @@ let wave = 1;
 let areaWidth = 0;
 let areaHeight = 0;
 let powerupTimer = randomRange(POWERUP_SPAWN_MIN, POWERUP_SPAWN_MAX);
+let portalTimer = randomRange(PORTAL_SPAWN_MIN, PORTAL_SPAWN_MAX);
 let dashCooldownTimer = 0;
 let dashTimer = 0;
 let shieldCount = 0;
@@ -410,6 +416,17 @@ function createPowerup(type) {
   powerups.push(powerup);
 }
 
+function createPortal() {
+  const x = Math.random() * (areaWidth - PORTAL_SIZE);
+  const y = randomRange(areaHeight * 0.18, areaHeight * 0.7);
+  const portal = { id: crypto.randomUUID(), x, y, size: PORTAL_SIZE, life: PORTAL_LIFETIME };
+  const el = document.createElement("div");
+  el.className = "portal";
+  portal.el = el;
+  gameArea.appendChild(el);
+  portals.push(portal);
+}
+
 function maybeSpawnPowerup(delta) {
   powerupTimer -= delta;
   if (powerupTimer > 0) return;
@@ -418,9 +435,22 @@ function maybeSpawnPowerup(delta) {
   powerupTimer = randomRange(POWERUP_SPAWN_MIN, POWERUP_SPAWN_MAX);
 }
 
+function maybeSpawnPortal(delta) {
+  portalTimer -= delta;
+  if (portalTimer > 0) return;
+  createPortal();
+  portalTimer = randomRange(PORTAL_SPAWN_MIN, PORTAL_SPAWN_MAX);
+}
+
 function renderPowerups() {
   for (const item of powerups) {
     item.el.style.transform = `translate(${item.x}px, ${item.y}px)`;
+  }
+}
+
+function renderPortals() {
+  for (const p of portals) {
+    p.el.style.transform = `translate(${p.x}px, ${p.y}px)`;
   }
 }
 
@@ -477,6 +507,17 @@ function updatePowerups(delta) {
   });
 }
 
+function updatePortals(delta) {
+  portals = portals.filter((item) => {
+    item.life -= delta;
+    if (item.life <= 0) {
+      item.el.remove();
+      return false;
+    }
+    return true;
+  });
+}
+
 function isColliding(a, b) {
   const aSize = a.size ?? PLAYER_SIZE;
   const bSize = b.size ?? OBSTACLE_SIZE;
@@ -507,6 +548,30 @@ function collectPowerups() {
     if (!isColliding(playerBox, item)) return true;
     item.el.remove();
     applyPowerup(item.type);
+    return false;
+  });
+}
+
+function collectPortals() {
+  const playerBox = { x: player.x, y: player.y, size: PLAYER_SIZE };
+  portals = portals.filter((item) => {
+    if (!isColliding(playerBox, item)) return true;
+    item.el.remove();
+    const targetX = randomRange(8, areaWidth - PLAYER_SIZE - 8);
+    const targetY = randomRange(14, areaHeight - PLAYER_SIZE - 20);
+    player.x = clamp(targetX, 0, areaWidth - PLAYER_SIZE);
+    player.y = clamp(targetY, 0, areaHeight - PLAYER_SIZE);
+
+    if (Math.random() < 0.5) {
+      const bonus = 50;
+      score += bonus;
+      addFloatingText(player.x + PLAYER_SIZE * 0.5, player.y - 10, `时空跃迁 +${bonus}`, "crit");
+    } else {
+      shieldCount = clamp(shieldCount + 1, 0, MAX_SHIELD_COUNT);
+      addFloatingText(player.x + PLAYER_SIZE * 0.5, player.y - 10, "时空护盾 +1", "combo");
+    }
+    addScreenShake();
+    playBeep(520, 0.08, 0.02);
     return false;
   });
 }
@@ -727,6 +792,8 @@ function clearObstaclesAndPowerups() {
   obstacles = [];
   for (const item of powerups) item.el.remove();
   powerups = [];
+  for (const p of portals) p.el.remove();
+  portals = [];
   for (const bullet of bullets) bullet.el.remove();
   bullets = [];
 }
@@ -840,12 +907,15 @@ function gameLoop(timestamp) {
   updateFever(delta);
   updateBoss(delta);
   maybeSpawnPowerup(delta);
+  maybeSpawnPortal(delta);
   updatePlayer(delta);
   updateObstacles(delta);
   updateBullets(delta);
   updatePowerups(delta);
+  updatePortals(delta);
   removeOffscreenObstacles();
   collectPowerups();
+  collectPortals();
   checkBulletEnemyCollision();
   updateScore(delta);
   maybeTriggerNearHitSlowmo();
@@ -854,6 +924,7 @@ function gameLoop(timestamp) {
   renderObstacles();
   renderBullets();
   renderPowerups();
+  renderPortals();
   updateDangerFeedback();
   updateHud();
 
@@ -884,6 +955,7 @@ function startGame() {
   waveEl.textContent = "1";
   lastTime = 0;
   powerupTimer = randomRange(POWERUP_SPAWN_MIN, POWERUP_SPAWN_MAX);
+  portalTimer = randomRange(PORTAL_SPAWN_MIN, PORTAL_SPAWN_MAX);
   dashCooldownTimer = 0;
   dashTimer = 0;
   shieldCount = 0;

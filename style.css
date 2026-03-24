@@ -72,9 +72,15 @@ body {
 
 .play-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: 240px minmax(0, 1fr) 280px;
   gap: 16px;
   align-items: start;
+}
+
+.guide-panel {
+  width: 240px;
+  display: grid;
+  gap: 8px;
 }
 
 .stats {
@@ -269,6 +275,20 @@ body {
   background: radial-gradient(circle at 30% 30%, #fff4d9 0%, #ffce5c 58%, #a9781b 100%);
 }
 
+.portal {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgb(172 136 255 / 75%);
+  background:
+    radial-gradient(circle at center, rgb(9 14 35 / 20%) 24%, rgb(172 136 255 / 34%) 62%, rgb(85 225 255 / 30%) 100%);
+  box-shadow:
+    0 0 12px rgb(167 122 255 / 55%),
+    0 0 26px rgb(96 221 255 / 38%);
+  animation: portal-spin 1.25s linear infinite;
+}
+
 .bullet {
   position: absolute;
   width: 8px;
@@ -406,6 +426,20 @@ body {
   gap: 4px;
 }
 
+.guide-list {
+  margin: 0;
+  padding-left: 16px;
+  color: #c3cceb;
+  font-size: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.guide-list strong {
+  color: #dff4ff;
+  font-weight: 700;
+}
+
 .achievement-list li.unlocked {
   color: #ffe19a;
 }
@@ -533,6 +567,21 @@ body {
   }
 }
 
+@keyframes portal-spin {
+  0% {
+    transform: rotate(0deg) scale(0.9);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.06);
+    filter: hue-rotate(70deg);
+  }
+  100% {
+    transform: rotate(360deg) scale(0.9);
+    filter: hue-rotate(140deg);
+  }
+}
+
 .player.shielded {
   box-shadow:
     0 0 0 3px rgb(99 217 255 / 40%),
@@ -613,6 +662,7 @@ small {
     grid-template-columns: 1fr;
   }
 
+  .guide-panel,
   .side-panels {
     width: 100%;
   }
