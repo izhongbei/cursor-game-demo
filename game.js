@@ -12,6 +12,9 @@ const OBSTACLE_SIZE = 24;
 const BASE_SPEED = 170;
 const MAX_SPEED = 360;
 const SCORE_RATE = 10;
+const BASE_TARGET_OBSTACLES = 3;
+const TARGET_OBSTACLE_GROWTH = 0.25;
+const MAX_TARGET_OBSTACLES = 12;
 
 let gameState = "idle";
 let player = { x: 0, y: 0, speed: 260 };
@@ -137,9 +140,18 @@ function updateDifficulty(delta) {
 
   const minInterval = 0.28;
   spawnInterval = Math.max(minInterval, 0.9 - gameTime * 0.03);
+  const targetObstacles = Math.min(
+    MAX_TARGET_OBSTACLES,
+    Math.floor(BASE_TARGET_OBSTACLES + gameTime * TARGET_OBSTACLE_GROWTH)
+  );
 
   if (spawnTimer >= spawnInterval) {
     spawnTimer = 0;
+    createObstacle();
+  }
+
+  // Keep increasing the simultaneous obstacle count over time.
+  while (obstacles.length < targetObstacles) {
     createObstacle();
   }
 }
