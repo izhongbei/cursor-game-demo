@@ -190,6 +190,17 @@ body {
   background: radial-gradient(circle at 30% 30%, #fff4d9 0%, #ffce5c 58%, #a9781b 100%);
 }
 
+.bullet {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e8fcff 0%, #7be9ff 62%, #2ca8d1 100%);
+  box-shadow:
+    0 0 10px rgb(123 233 255 / 60%),
+    0 0 18px rgb(123 233 255 / 24%);
+}
+
 .pause-btn {
   margin-left: auto;
   border: 1px solid rgb(99 230 255 / 45%);

@@ -49,6 +49,10 @@ const BOSS_INTERVAL = 60;
 const BOSS_DURATION = 10;
 const SLOWMO_DURATION = 0.1;
 const COMBO_WINDOW = 2.2;
+const BULLET_SIZE = 8;
+const BULLET_SPEED = 620;
+const FIRE_COOLDOWN = 0.18;
+const KILL_SCORE = 8;
 
 let gameState = "idle";
 let player = { x: 0, y: 0, speed: 260 };
@@ -76,6 +80,8 @@ let nearHitCooldown = 0;
 let comboCount = 0;
 let comboTimer = 0;
 let bossState = { active: false, mode: "none", timer: 0, nextAt: BOSS_INTERVAL, laserAngle: 0 };
+let bullets = [];
+let fireCooldownTimer = 0;
 
 bestScoreEl.textContent = String(bestScore);
 updateHud();
@@ -232,6 +238,37 @@ function renderPowerups() {
   }
 }
 
+function createBullet() {
+  const bullet = {
+    id: crypto.randomUUID(),
+    x: player.x + PLAYER_SIZE * 0.5 - BULLET_SIZE * 0.5,
+    y: player.y - BULLET_SIZE - 2,
+    size: BULLET_SIZE
+  };
+  const el = document.createElement("div");
+  el.className = "bullet";
+  bullet.el = el;
+  gameArea.appendChild(el);
+  bullets.push(bullet);
+}
+
+function updateBullets(delta) {
+  for (const bullet of bullets) {
+    bullet.y -= BULLET_SPEED * delta;
+    if (bullet.y < -bullet.size - 10) {
+      bullet._removed = true;
+      bullet.el.remove();
+    }
+  }
+  bullets = bullets.filter((b) => !b._removed);
+}
+
+function renderBullets() {
+  for (const bullet of bullets) {
+    bullet.el.style.transform = `translate(${bullet.x}px, ${bullet.y}px)`;
+  }
+}
+
 function updatePowerups(delta) {
   powerups = powerups.filter((item) => {
     item.life -= delta;
@@ -280,6 +317,22 @@ function removeOffscreenObstacles() {
     }
     return true;
   });
+}
+
+function checkBulletEnemyCollision() {
+  for (const bullet of bullets) {
+    const hitIndex = obstacles.findIndex((ob) => isColliding(bullet, ob));
+    if (hitIndex < 0) continue;
+    const [hit] = obstacles.splice(hitIndex, 1);
+    if (hit) {
+      hit.el.remove();
+      score += KILL_SCORE;
+      onComboEvent();
+    }
+    bullet._removed = true;
+    bullet.el.remove();
+  }
+  bullets = bullets.filter((b) => !b._removed);
 }
 
 function updatePlayer(delta) {
@@ -449,6 +502,8 @@ function clearObstaclesAndPowerups() {
   obstacles = [];
   for (const item of powerups) item.el.remove();
   powerups = [];
+  for (const bullet of bullets) bullet.el.remove();
+  bullets = [];
 }
 
 function endGame() {
@@ -477,6 +532,7 @@ function updateTimers(delta) {
   if (slowmoTimer > 0) slowmoTimer -= delta;
   if (nearHitCooldown > 0) nearHitCooldown -= delta;
   if (comboTimer > 0) comboTimer -= delta;
+  if (fireCooldownTimer > 0) fireCooldownTimer -= delta;
   if (comboTimer < 0) {
     comboTimer = 0;
     comboCount = 0;
@@ -487,6 +543,7 @@ function updateTimers(delta) {
   doubleScoreTimer = Math.max(0, doubleScoreTimer);
   slowmoTimer = Math.max(0, slowmoTimer);
   nearHitCooldown = Math.max(0, nearHitCooldown);
+  fireCooldownTimer = Math.max(0, fireCooldownTimer);
   timeScale = slowmoTimer > 0 ? 0.4 : 1;
 }
 
@@ -507,6 +564,17 @@ function tryDash(event) {
   dashCooldownTimer = DASH_COOLDOWN;
 }
 
+function tryFire(event) {
+  if (event.code !== "KeyJ" && event.code !== "KeyK") return;
+  if (gameState !== "running") return;
+  if (fireCooldownTimer > 0) {
+    return;
+  }
+  createBullet();
+  fireCooldownTimer = FIRE_COOLDOWN;
+  playBeep(760, 0.03, 0.012);
+}
+
 function gameLoop(timestamp) {
   if (gameState !== "running") return;
   if (!lastTime) lastTime = timestamp;
@@ -520,14 +588,17 @@ function gameLoop(timestamp) {
   maybeSpawnPowerup(delta);
   updatePlayer(delta);
   updateObstacles(delta);
+  updateBullets(delta);
   updatePowerups(delta);
   removeOffscreenObstacles();
   collectPowerups();
+  checkBulletEnemyCollision();
   updateScore(delta);
   maybeTriggerNearHitSlowmo();
 
   renderPlayer();
   renderObstacles();
+  renderBullets();
   renderPowerups();
   updateDangerFeedback();
   updateHud();
@@ -568,6 +639,7 @@ function startGame() {
   nearHitCooldown = 0;
   comboCount = 0;
   comboTimer = 0;
+  fireCooldownTimer = 0;
   timeScale = 1;
   bossState = { active: false, mode: "none", timer: 0, nextAt: BOSS_INTERVAL, laserAngle: 0 };
   laserEl.classList.remove("show");
@@ -618,6 +690,7 @@ function togglePause() {
 window.addEventListener("keydown", (event) => {
   keys[event.code] = true;
   tryDash(event);
+  tryFire(event);
 });
 window.addEventListener("keyup", (event) => {
   keys[event.code] = false;
