@@ -357,9 +357,10 @@ function renderPlayer() {
 function pickObstacleType() {
   const progress = Math.min(0.28, (wave - 1) * 0.035 + gameTime * 0.0015);
   const r = Math.random();
-  if (r < 0.58 - progress) return "normal";
-  if (r < 0.78) return "tracking";
-  if (r < 0.93) return "bouncing";
+  if (r < 0.44 - progress * 0.7) return "normal";
+  if (r < 0.64) return "tracking";
+  if (r < 0.76) return "bouncing";
+  if (r < 0.96) return "star";
   return "splitter";
 }
 

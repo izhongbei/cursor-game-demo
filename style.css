@@ -283,6 +283,27 @@ body {
   animation-duration: 0.92s;
 }
 
+.obstacle.star {
+  border: 0;
+  background: #fbe97a;
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+  box-shadow:
+    0 0 10px rgb(255 231 123 / 85%),
+    0 0 22px rgb(255 210 71 / 50%);
+  animation-duration: 1.35s;
+}
+
 .powerup {
   position: absolute;
   width: 22px;
