@@ -6,7 +6,9 @@ const startBtn = document.getElementById("start-btn");
 const pauseBtn = document.getElementById("pause-btn");
 const scoreEl = document.getElementById("score");
 const bestScoreEl = document.getElementById("best-score");
+const comboCountEl = document.getElementById("combo-count");
 const waveEl = document.getElementById("wave");
+const modeLabelEl = document.getElementById("mode-label");
 const shieldCountEl = document.getElementById("shield-count");
 const dashCooldownEl = document.getElementById("dash-cooldown");
 const slowStatusEl = document.getElementById("slow-status");
@@ -15,6 +17,12 @@ const bossBannerEl = document.getElementById("boss-banner");
 const laserEl = document.getElementById("laser");
 const dangerVignetteEl = document.getElementById("danger-vignette");
 const statusEl = document.getElementById("status");
+const feedbackLayerEl = document.getElementById("feedback-layer");
+const achievementToastEl = document.getElementById("achievement-toast");
+const achievementListEl = document.getElementById("achievement-list");
+const leaderboardListEl = document.getElementById("leaderboard-list");
+const modeNormalBtn = document.getElementById("mode-normal-btn");
+const modeEndlessBtn = document.getElementById("mode-endless-btn");
 
 const PLAYER_SIZE = 28;
 const OBSTACLE_SIZE = 24;
@@ -55,6 +63,21 @@ const BULLET_SIDE_FACTOR = 0.55;
 const BULLET_OUTER_SIDE_FACTOR = 1.05;
 const FIRE_COOLDOWN = 0.18;
 const KILL_SCORE = 8;
+const CRIT_CHANCE = 0.2;
+const CRIT_MULTIPLIER = 2.2;
+const NORMAL_MODE_TARGET_TIME = 120;
+const LEADERBOARD_LIMIT = 6;
+const MAX_ACHIEVEMENT_TOAST_MS = 2200;
+const GAME_STORAGE_KEY = "avoid-block-game-save-v2";
+
+const ACHIEVEMENT_META = [
+  { id: "first-kill", title: "初次击破", desc: "首次击毁障碍物" },
+  { id: "combo-10", title: "连击新星", desc: "达成 10 连击" },
+  { id: "shield-master", title: "护盾达人", desc: "单局叠到 3 层护盾" },
+  { id: "score-500", title: "500分俱乐部", desc: "单局达到 500 分" },
+  { id: "survive-120", title: "坚韧生还", desc: "生存达到 120 秒" },
+  { id: "endless-score-800", title: "无尽征服者", desc: "无尽模式达到 800 分" }
+];
 
 let gameState = "idle";
 let player = { x: 0, y: 0, speed: 260 };
@@ -84,8 +107,48 @@ let comboTimer = 0;
 let bossState = { active: false, mode: "none", timer: 0, nextAt: BOSS_INTERVAL, laserAngle: 0 };
 let bullets = [];
 let fireCooldownTimer = 0;
+let selectedMode = "normal";
+let achievementToastTimer = 0;
+let endlessLeaderboard = [];
+let achievements = {};
+
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(GAME_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed.endlessLeaderboard)) {
+      endlessLeaderboard = parsed.endlessLeaderboard
+        .map((it) => ({
+          score: Number(it.score) || 0,
+          survived: Number(it.survived) || 0,
+          date: String(it.date || "")
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, LEADERBOARD_LIMIT);
+    }
+    if (parsed.achievements && typeof parsed.achievements === "object") {
+      achievements = parsed.achievements;
+    }
+  } catch {
+    endlessLeaderboard = [];
+    achievements = {};
+  }
+}
+
+function persistSave() {
+  const payload = {
+    endlessLeaderboard,
+    achievements
+  };
+  localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify(payload));
+}
 
 bestScoreEl.textContent = String(bestScore);
+loadSave();
+renderAchievements();
+renderLeaderboard();
+updateModeUi();
 updateHud();
 
 function updateAreaSize() {
@@ -119,6 +182,82 @@ function addScreenShake() {
   gameArea.classList.remove("shake");
   void gameArea.offsetWidth;
   gameArea.classList.add("shake");
+}
+
+function updateModeUi() {
+  modeLabelEl.textContent = selectedMode === "endless" ? "无尽" : "标准";
+  modeNormalBtn.classList.toggle("active", selectedMode === "normal");
+  modeEndlessBtn.classList.toggle("active", selectedMode === "endless");
+}
+
+function setMode(mode) {
+  if (gameState === "running") return;
+  selectedMode = mode;
+  updateModeUi();
+}
+
+function addFloatingText(x, y, text, type = "combo") {
+  const el = document.createElement("span");
+  el.className = `floating-text ${type}`;
+  el.textContent = text;
+  el.style.left = `${x}px`;
+  el.style.top = `${y}px`;
+  feedbackLayerEl.appendChild(el);
+  window.setTimeout(() => el.remove(), 640);
+}
+
+function showAchievementToast(text) {
+  achievementToastEl.textContent = `成就解锁：${text}`;
+  achievementToastEl.classList.add("show");
+  achievementToastTimer = MAX_ACHIEVEMENT_TOAST_MS;
+}
+
+function unlockAchievement(id) {
+  if (achievements[id]) return;
+  achievements[id] = true;
+  persistSave();
+  renderAchievements();
+  const meta = ACHIEVEMENT_META.find((it) => it.id === id);
+  if (meta) showAchievementToast(meta.title);
+}
+
+function renderAchievements() {
+  achievementListEl.innerHTML = "";
+  for (const meta of ACHIEVEMENT_META) {
+    const li = document.createElement("li");
+    const unlocked = Boolean(achievements[meta.id]);
+    li.className = unlocked ? "unlocked" : "";
+    li.textContent = unlocked ? `${meta.title} - 已解锁` : `${meta.title} - ${meta.desc}`;
+    achievementListEl.appendChild(li);
+  }
+}
+
+function renderLeaderboard() {
+  leaderboardListEl.innerHTML = "";
+  if (endlessLeaderboard.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "暂无记录";
+    leaderboardListEl.appendChild(li);
+    return;
+  }
+  for (const item of endlessLeaderboard) {
+    const li = document.createElement("li");
+    li.textContent = `${item.score} 分 / ${Math.floor(item.survived)}s`;
+    leaderboardListEl.appendChild(li);
+  }
+}
+
+function pushEndlessRecord(finalScore) {
+  if (selectedMode !== "endless") return;
+  endlessLeaderboard.push({
+    score: finalScore,
+    survived: gameTime,
+    date: new Date().toISOString()
+  });
+  endlessLeaderboard.sort((a, b) => b.score - a.score);
+  endlessLeaderboard = endlessLeaderboard.slice(0, LEADERBOARD_LIMIT);
+  persistSave();
+  renderLeaderboard();
 }
 
 function playBeep(freq = 620, duration = 0.05, volume = 0.016) {
@@ -299,6 +438,10 @@ function onComboEvent() {
   comboCount = comboTimer > 0 ? comboCount + 1 : 1;
   comboTimer = COMBO_WINDOW;
   playBeep(640 + comboCount * 70, 0.045, 0.018);
+  if (comboCount >= 2) {
+    addFloatingText(player.x + PLAYER_SIZE * 0.5, player.y - 8, `COMBO x${comboCount}`, "combo");
+  }
+  if (comboCount >= 10) unlockAchievement("combo-10");
 }
 
 function applyPowerup(type) {
@@ -306,6 +449,7 @@ function applyPowerup(type) {
   if (type === "slow") slowTimer = SLOW_EFFECT_DURATION;
   if (type === "double") doubleScoreTimer = DOUBLE_SCORE_DURATION;
   onComboEvent();
+  if (shieldCount >= MAX_SHIELD_COUNT) unlockAchievement("shield-master");
 }
 
 function collectPowerups() {
@@ -335,8 +479,17 @@ function checkBulletEnemyCollision() {
     const [hit] = obstacles.splice(hitIndex, 1);
     if (hit) {
       hit.el.remove();
-      score += KILL_SCORE;
+      const isCrit = Math.random() < CRIT_CHANCE;
+      const gain = isCrit ? Math.floor(KILL_SCORE * CRIT_MULTIPLIER) : KILL_SCORE;
+      score += gain;
       onComboEvent();
+      unlockAchievement("first-kill");
+      if (isCrit) {
+        addFloatingText(hit.x + hit.size * 0.5, hit.y, `暴击 +${gain}`, "crit");
+        playBeep(920, 0.06, 0.02);
+      } else {
+        addFloatingText(hit.x + hit.size * 0.5, hit.y, `+${gain}`, "combo");
+      }
     }
     bullet._removed = true;
     bullet.el.remove();
@@ -440,10 +593,16 @@ function updateDifficulty(delta) {
   gameTime += delta;
   wave = Math.floor(gameTime / WAVE_DURATION) + 1;
   waveEl.textContent = String(wave);
-  const minInterval = 0.28;
-  spawnInterval = Math.max(minInterval, 0.9 - gameTime * 0.03 - (wave - 1) * WAVE_SPAWN_STEP);
+  const minInterval = selectedMode === "endless" ? 0.24 : 0.33;
+  const growthFactor = selectedMode === "endless" ? 0.038 : 0.022;
+  spawnInterval = Math.max(minInterval, 0.9 - gameTime * growthFactor - (wave - 1) * WAVE_SPAWN_STEP);
+  if (selectedMode === "normal" && gameTime >= NORMAL_MODE_TARGET_TIME) {
+    setStatus("标准模式通关");
+    endGame("标准模式通关！");
+    return;
+  }
   const targetObstacles = Math.min(
-    MAX_TARGET_OBSTACLES + (wave - 1) * 2,
+    (selectedMode === "endless" ? MAX_TARGET_OBSTACLES + (wave - 1) * 2 : MAX_TARGET_OBSTACLES + Math.floor((wave - 1) * 1.2)),
     Math.floor(BASE_TARGET_OBSTACLES + gameTime * TARGET_OBSTACLE_GROWTH + (wave - 1) * WAVE_TARGET_STEP)
   );
   if (spawnTimer >= spawnInterval) {
@@ -457,6 +616,9 @@ function updateScore(delta) {
   const multiplier = doubleScoreTimer > 0 ? 2 : 1;
   score += SCORE_RATE * multiplier * delta;
   scoreEl.textContent = String(Math.floor(score));
+  if (score >= 500) unlockAchievement("score-500");
+  if (gameTime >= 120) unlockAchievement("survive-120");
+  if (selectedMode === "endless" && score >= 800) unlockAchievement("endless-score-800");
 }
 
 function tryConsumeShield() {
@@ -515,7 +677,7 @@ function clearObstaclesAndPowerups() {
   bullets = [];
 }
 
-function endGame() {
+function endGame(customText = "") {
   gameState = "ended";
   setStatus("已结束");
   pauseBtn.disabled = true;
@@ -530,7 +692,9 @@ function endGame() {
     localStorage.setItem("avoid-block-best-score", String(bestScore));
     bestScoreEl.textContent = String(bestScore);
   }
-  showOverlay(`游戏结束！最终得分：${finalScore}`);
+  pushEndlessRecord(finalScore);
+  const defaultText = customText || `游戏结束！最终得分：${finalScore}`;
+  showOverlay(`${defaultText}（${selectedMode === "endless" ? "无尽" : "标准"}）`);
 }
 
 function updateTimers(delta) {
@@ -542,6 +706,7 @@ function updateTimers(delta) {
   if (nearHitCooldown > 0) nearHitCooldown -= delta;
   if (comboTimer > 0) comboTimer -= delta;
   if (fireCooldownTimer > 0) fireCooldownTimer -= delta;
+  if (achievementToastTimer > 0) achievementToastTimer -= delta * 1000;
   if (comboTimer < 0) {
     comboTimer = 0;
     comboCount = 0;
@@ -553,11 +718,16 @@ function updateTimers(delta) {
   slowmoTimer = Math.max(0, slowmoTimer);
   nearHitCooldown = Math.max(0, nearHitCooldown);
   fireCooldownTimer = Math.max(0, fireCooldownTimer);
+  achievementToastTimer = Math.max(0, achievementToastTimer);
   timeScale = slowmoTimer > 0 ? 0.4 : 1;
+  if (achievementToastTimer <= 0) {
+    achievementToastEl.classList.remove("show");
+  }
 }
 
 function updateHud() {
   shieldCountEl.textContent = String(shieldCount);
+  comboCountEl.textContent = `x${comboCount}`;
   dashCooldownEl.textContent = dashCooldownTimer > 0 ? `${dashCooldownTimer.toFixed(1)}s` : "就绪";
   slowStatusEl.textContent = slowTimer > 0 ? `减速: ${slowTimer.toFixed(1)}s` : "减速: 关闭";
   doubleStatusEl.textContent = doubleScoreTimer > 0 ? `双倍分: ${doubleScoreTimer.toFixed(1)}s` : "双倍分: 关闭";
@@ -597,6 +767,7 @@ function gameLoop(timestamp) {
 
   updateTimers(delta);
   updateDifficulty(delta);
+  if (gameState !== "running") return;
   updateBoss(delta);
   maybeSpawnPowerup(delta);
   updatePlayer(delta);
@@ -659,6 +830,7 @@ function startGame() {
   bossBannerEl.classList.remove("show");
   dangerVignetteEl.style.opacity = "0";
   updateHud();
+  updateModeUi();
 
   resetPlayer();
   hideOverlay();
@@ -721,6 +893,8 @@ window.addEventListener("resize", () => {
 
 startBtn.addEventListener("click", startGame);
 pauseBtn.addEventListener("click", togglePause);
+modeNormalBtn.addEventListener("click", () => setMode("normal"));
+modeEndlessBtn.addEventListener("click", () => setMode("endless"));
 
 updateAreaSize();
 resetPlayer();

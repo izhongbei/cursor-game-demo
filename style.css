@@ -70,6 +70,13 @@ body {
   backdrop-filter: blur(6px);
 }
 
+.play-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 12px;
+  align-items: start;
+}
+
 .stats {
   display: flex;
   justify-content: flex-start;
@@ -124,6 +131,49 @@ body {
     inset 0 0 38px rgb(0 0 0 / 35%),
     0 0 30px rgb(99 230 255 / 12%);
   transform: translate(0, 0);
+}
+
+.feedback-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 7;
+}
+
+.floating-text {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: "Orbitron", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 0;
+  animation: float-up 0.62s ease-out forwards;
+}
+
+.floating-text.combo {
+  color: #7df8ff;
+  text-shadow: 0 0 10px rgb(125 248 255 / 55%);
+}
+
+.floating-text.crit {
+  color: #ffd98a;
+  font-size: 18px;
+  text-shadow: 0 0 10px rgb(255 217 138 / 58%);
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.86);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -112%) scale(1.08);
+  }
 }
 
 .player {
@@ -225,6 +275,86 @@ body {
   display: flex;
   gap: 8px;
   z-index: 3;
+}
+
+.achievement-toast {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  max-width: 240px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgb(255 221 122 / 55%);
+  background: rgb(47 30 6 / 88%);
+  color: #ffe8ae;
+  font-size: 12px;
+  z-index: 8;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.achievement-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.side-panels {
+  width: 220px;
+  display: grid;
+  gap: 8px;
+}
+
+.mini-panel {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  background: rgb(4 8 20 / 72%);
+  backdrop-filter: blur(4px);
+}
+
+.mini-panel h3 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: #d7e2ff;
+  letter-spacing: 0.06em;
+}
+
+.mode-row {
+  display: flex;
+  gap: 6px;
+}
+
+.mode-btn {
+  flex: 1;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: rgb(255 255 255 / 5%);
+  color: #cdd8f8;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mode-btn.active {
+  border-color: rgb(99 230 255 / 55%);
+  box-shadow: 0 0 10px rgb(99 230 255 / 24%);
+  color: #eff6ff;
+}
+
+.achievement-list,
+.leaderboard-list {
+  margin: 0;
+  padding-left: 16px;
+  color: #c3cceb;
+  font-size: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.achievement-list li.unlocked {
+  color: #ffe19a;
 }
 
 .effect-chip {
@@ -381,5 +511,13 @@ small {
 
   .pause-btn {
     margin-left: 0;
+  }
+
+  .play-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side-panels {
+    width: 100%;
   }
 }
