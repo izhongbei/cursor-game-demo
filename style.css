@@ -133,6 +133,10 @@ body {
   transform: translate(0, 0);
 }
 
+.game-area.fever {
+  animation: fever-glow 1.2s linear infinite;
+}
+
 .feedback-layer {
   position: absolute;
   inset: 0;
@@ -270,10 +274,16 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #e8fcff 0%, #7be9ff 62%, #2ca8d1 100%);
+  --bullet-hue: 190;
+  background: radial-gradient(
+    circle at 35% 35%,
+    hsl(var(--bullet-hue) 100% 92%) 0%,
+    hsl(var(--bullet-hue) 94% 62%) 62%,
+    hsl(var(--bullet-hue) 84% 44%) 100%
+  );
   box-shadow:
-    0 0 10px rgb(123 233 255 / 60%),
-    0 0 18px rgb(123 233 255 / 24%);
+    0 0 10px hsl(var(--bullet-hue) 100% 72% / 60%),
+    0 0 18px hsl(var(--bullet-hue) 100% 64% / 28%);
 }
 
 .pause-btn {
@@ -366,6 +376,24 @@ body {
   border-color: rgb(99 230 255 / 55%);
   box-shadow: 0 0 10px rgb(99 230 255 / 24%);
   color: #eff6ff;
+}
+
+.fever-btn {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid rgb(255 173 230 / 55%);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: linear-gradient(135deg, rgb(84 26 109 / 86%) 0%, rgb(163 56 126 / 86%) 100%);
+  color: #ffe4fa;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fever-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .achievement-list,
@@ -481,6 +509,27 @@ body {
     box-shadow:
       inset 0 0 38px rgb(0 0 0 / 35%),
       0 0 30px rgb(99 230 255 / 12%);
+  }
+}
+
+@keyframes fever-glow {
+  0% {
+    filter: hue-rotate(0deg) saturate(1.05);
+    box-shadow:
+      inset 0 0 38px rgb(0 0 0 / 35%),
+      0 0 34px rgb(99 230 255 / 20%);
+  }
+  50% {
+    filter: hue-rotate(110deg) saturate(1.3);
+    box-shadow:
+      inset 0 0 28px rgb(255 255 255 / 16%),
+      0 0 54px rgb(255 173 230 / 36%);
+  }
+  100% {
+    filter: hue-rotate(220deg) saturate(1.15);
+    box-shadow:
+      inset 0 0 38px rgb(0 0 0 / 35%),
+      0 0 34px rgb(99 230 255 / 20%);
   }
 }
 

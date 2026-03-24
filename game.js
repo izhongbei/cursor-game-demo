@@ -13,6 +13,7 @@ const shieldCountEl = document.getElementById("shield-count");
 const dashCooldownEl = document.getElementById("dash-cooldown");
 const slowStatusEl = document.getElementById("slow-status");
 const doubleStatusEl = document.getElementById("double-status");
+const feverStatusEl = document.getElementById("fever-status");
 const bossBannerEl = document.getElementById("boss-banner");
 const laserEl = document.getElementById("laser");
 const dangerVignetteEl = document.getElementById("danger-vignette");
@@ -23,6 +24,7 @@ const achievementListEl = document.getElementById("achievement-list");
 const leaderboardListEl = document.getElementById("leaderboard-list");
 const modeNormalBtn = document.getElementById("mode-normal-btn");
 const modeEndlessBtn = document.getElementById("mode-endless-btn");
+const feverBtn = document.getElementById("fever-btn");
 
 const PLAYER_SIZE = 28;
 const OBSTACLE_SIZE = 24;
@@ -69,6 +71,11 @@ const NORMAL_MODE_TARGET_TIME = 120;
 const LEADERBOARD_LIMIT = 6;
 const MAX_ACHIEVEMENT_TOAST_MS = 2200;
 const GAME_STORAGE_KEY = "avoid-block-game-save-v2";
+const FEVER_INTERVAL_MIN = 30;
+const FEVER_INTERVAL_MAX = 50;
+const FEVER_DURATION = 6;
+const FEVER_SCORE_MULTIPLIER = 1.6;
+const MANUAL_FEVER_COOLDOWN = 18;
 
 const ACHIEVEMENT_META = [
   { id: "first-kill", title: "初次击破", desc: "首次击毁障碍物" },
@@ -111,6 +118,8 @@ let selectedMode = "normal";
 let achievementToastTimer = 0;
 let endlessLeaderboard = [];
 let achievements = {};
+let feverState = { active: false, timer: 0, nextAt: randomRange(FEVER_INTERVAL_MIN, FEVER_INTERVAL_MAX) };
+let manualFeverCooldownTimer = 0;
 
 function loadSave() {
   try {
@@ -211,6 +220,35 @@ function showShieldTriggerFeedback() {
   gameArea.classList.remove("shield-flash");
   void gameArea.offsetWidth;
   gameArea.classList.add("shield-flash");
+}
+
+function beginFever() {
+  feverState.active = true;
+  feverState.timer = FEVER_DURATION;
+  feverState.nextAt = gameTime + randomRange(FEVER_INTERVAL_MIN, FEVER_INTERVAL_MAX);
+  gameArea.classList.add("fever");
+  addFloatingText(areaWidth * 0.5, areaHeight * 0.3, "彩虹狂欢!", "crit");
+  playBeep(980, 0.08, 0.02);
+}
+
+function triggerManualFever() {
+  if (gameState !== "running") return;
+  if (feverState.active || manualFeverCooldownTimer > 0) return;
+  manualFeverCooldownTimer = MANUAL_FEVER_COOLDOWN;
+  beginFever();
+}
+
+function updateFever(delta) {
+  if (!feverState.active && gameTime >= feverState.nextAt) {
+    beginFever();
+  }
+  if (!feverState.active) return;
+  feverState.timer -= delta;
+  if (feverState.timer <= 0) {
+    feverState.active = false;
+    feverState.timer = 0;
+    gameArea.classList.remove("fever");
+  }
 }
 
 function showAchievementToast(text) {
@@ -397,10 +435,12 @@ function createBullet(directionX = 0) {
     y: player.y - BULLET_SIZE - 2,
     size: BULLET_SIZE,
     vx: nx * BULLET_SPEED,
-    vy: ny * BULLET_SPEED
+    vy: ny * BULLET_SPEED,
+    hue: Math.floor(Math.random() * 360)
   };
   const el = document.createElement("div");
   el.className = "bullet";
+  el.style.setProperty("--bullet-hue", String(bullet.hue));
   bullet.el = el;
   gameArea.appendChild(el);
   bullets.push(bullet);
@@ -410,6 +450,8 @@ function updateBullets(delta) {
   for (const bullet of bullets) {
     bullet.x += bullet.vx * delta;
     bullet.y += bullet.vy * delta;
+    bullet.hue = (bullet.hue + 180 * delta) % 360;
+    bullet.el.style.setProperty("--bullet-hue", bullet.hue.toFixed(1));
     if (bullet.y < -bullet.size - 10 || bullet.x < -bullet.size - 10 || bullet.x > areaWidth + bullet.size + 10) {
       bullet._removed = true;
       bullet.el.remove();
@@ -496,6 +538,9 @@ function checkBulletEnemyCollision() {
         playBeep(920, 0.06, 0.02);
       } else {
         addFloatingText(hit.x + hit.size * 0.5, hit.y, `+${gain}`, "combo");
+      }
+      if (feverState.active) {
+        addFloatingText(hit.x + hit.size * 0.5, hit.y - 14, "FEVER!", "combo");
       }
     }
     bullet._removed = true;
@@ -620,7 +665,8 @@ function updateDifficulty(delta) {
 }
 
 function updateScore(delta) {
-  const multiplier = doubleScoreTimer > 0 ? 2 : 1;
+  const feverMultiplier = feverState.active ? FEVER_SCORE_MULTIPLIER : 1;
+  const multiplier = (doubleScoreTimer > 0 ? 2 : 1) * feverMultiplier;
   score += SCORE_RATE * multiplier * delta;
   scoreEl.textContent = String(Math.floor(score));
   if (score >= 500) unlockAchievement("score-500");
@@ -715,6 +761,7 @@ function updateTimers(delta) {
   if (comboTimer > 0) comboTimer -= delta;
   if (fireCooldownTimer > 0) fireCooldownTimer -= delta;
   if (achievementToastTimer > 0) achievementToastTimer -= delta * 1000;
+  if (manualFeverCooldownTimer > 0) manualFeverCooldownTimer -= delta;
   if (comboTimer < 0) {
     comboTimer = 0;
     comboCount = 0;
@@ -727,6 +774,7 @@ function updateTimers(delta) {
   nearHitCooldown = Math.max(0, nearHitCooldown);
   fireCooldownTimer = Math.max(0, fireCooldownTimer);
   achievementToastTimer = Math.max(0, achievementToastTimer);
+  manualFeverCooldownTimer = Math.max(0, manualFeverCooldownTimer);
   timeScale = slowmoTimer > 0 ? 0.4 : 1;
   if (achievementToastTimer <= 0) {
     achievementToastEl.classList.remove("show");
@@ -739,8 +787,21 @@ function updateHud() {
   dashCooldownEl.textContent = dashCooldownTimer > 0 ? `${dashCooldownTimer.toFixed(1)}s` : "就绪";
   slowStatusEl.textContent = slowTimer > 0 ? `减速: ${slowTimer.toFixed(1)}s` : "减速: 关闭";
   doubleStatusEl.textContent = doubleScoreTimer > 0 ? `双倍分: ${doubleScoreTimer.toFixed(1)}s` : "双倍分: 关闭";
+  feverStatusEl.textContent = feverState.active ? `狂欢: ${feverState.timer.toFixed(1)}s` : "狂欢: 关闭";
   slowStatusEl.classList.toggle("active", slowTimer > 0);
   doubleStatusEl.classList.toggle("active", doubleScoreTimer > 0);
+  feverStatusEl.classList.toggle("active", feverState.active);
+  const canManualFever = gameState === "running" && !feverState.active && manualFeverCooldownTimer <= 0;
+  feverBtn.disabled = !canManualFever;
+  if (gameState !== "running") {
+    feverBtn.textContent = "一键狂欢（开始后可用）";
+  } else if (feverState.active) {
+    feverBtn.textContent = "狂欢进行中...";
+  } else if (manualFeverCooldownTimer > 0) {
+    feverBtn.textContent = `一键狂欢（${manualFeverCooldownTimer.toFixed(1)}s）`;
+  } else {
+    feverBtn.textContent = "一键狂欢";
+  }
 }
 
 function tryDash(event) {
@@ -776,6 +837,7 @@ function gameLoop(timestamp) {
   updateTimers(delta);
   updateDifficulty(delta);
   if (gameState !== "running") return;
+  updateFever(delta);
   updateBoss(delta);
   maybeSpawnPowerup(delta);
   updatePlayer(delta);
@@ -833,6 +895,9 @@ function startGame() {
   comboTimer = 0;
   fireCooldownTimer = 0;
   timeScale = 1;
+  feverState = { active: false, timer: 0, nextAt: randomRange(FEVER_INTERVAL_MIN, FEVER_INTERVAL_MAX) };
+  manualFeverCooldownTimer = 0;
+  gameArea.classList.remove("fever");
   bossState = { active: false, mode: "none", timer: 0, nextAt: BOSS_INTERVAL, laserAngle: 0 };
   laserEl.classList.remove("show");
   bossBannerEl.classList.remove("show");
@@ -903,6 +968,7 @@ startBtn.addEventListener("click", startGame);
 pauseBtn.addEventListener("click", togglePause);
 modeNormalBtn.addEventListener("click", () => setMode("normal"));
 modeEndlessBtn.addEventListener("click", () => setMode("endless"));
+feverBtn.addEventListener("click", triggerManualFever);
 
 updateAreaSize();
 resetPlayer();
