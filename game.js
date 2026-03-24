@@ -25,6 +25,9 @@ const WAVE_DURATION = 20;
 const WAVE_SPEED_STEP = 18;
 const WAVE_SPAWN_STEP = 0.06;
 const WAVE_TARGET_STEP = 1;
+const TRACKING_STEER = 2.4;
+const BOUNCE_VX_MAX = 150;
+const SPLIT_TRIGGER_Y_RATIO = 0.38;
 
 const DASH_MULTIPLIER = 2.4;
 const DASH_DURATION = 0.22;
@@ -108,20 +111,55 @@ function createObstacle() {
   const speedBoost = Math.min(gameTime * 8, 120);
   const waveSpeedBoost = (wave - 1) * WAVE_SPEED_STEP;
   const speed = BASE_SPEED + speedBoost + Math.random() * 60;
+  const type = pickObstacleType();
 
   const obstacle = {
     id: crypto.randomUUID(),
     x,
     y: -OBSTACLE_SIZE - 6,
     speed: speed + waveSpeedBoost,
-    size: OBSTACLE_SIZE
+    size: OBSTACLE_SIZE,
+    type,
+    vx: type === "bouncing" ? randomRange(-BOUNCE_VX_MAX, BOUNCE_VX_MAX) : 0,
+    hasSplit: false,
+    splitAtY: areaHeight * SPLIT_TRIGGER_Y_RATIO + randomRange(-20, 20)
   };
 
   const el = document.createElement("div");
-  el.className = "obstacle";
+  el.className = `obstacle ${type}`;
   obstacle.el = el;
   gameArea.appendChild(el);
   obstacles.push(obstacle);
+}
+
+function createSplitChild(x, y, speed, vx) {
+  const childSize = 16;
+  const obstacle = {
+    id: crypto.randomUUID(),
+    x: clamp(x, 0, areaWidth - childSize),
+    y,
+    speed: speed * 1.05,
+    size: childSize,
+    type: "split-child",
+    vx,
+    hasSplit: true,
+    splitAtY: Infinity
+  };
+
+  const el = document.createElement("div");
+  el.className = "obstacle split-child";
+  obstacle.el = el;
+  gameArea.appendChild(el);
+  obstacles.push(obstacle);
+}
+
+function pickObstacleType() {
+  const progress = Math.min(0.28, (wave - 1) * 0.035 + gameTime * 0.0015);
+  const r = Math.random();
+  if (r < 0.58 - progress) return "normal";
+  if (r < 0.78) return "tracking";
+  if (r < 0.93) return "bouncing";
+  return "splitter";
 }
 
 function renderObstacles() {
@@ -212,11 +250,13 @@ function removeOffscreenObstacles() {
 }
 
 function isColliding(a, b) {
+  const aSize = a.size ?? PLAYER_SIZE;
+  const bSize = b.size ?? OBSTACLE_SIZE;
   return (
-    a.x < b.x + b.size &&
-    a.x + PLAYER_SIZE > b.x &&
-    a.y < b.y + b.size &&
-    a.y + PLAYER_SIZE > b.y
+    a.x < b.x + bSize &&
+    a.x + aSize > b.x &&
+    a.y < b.y + bSize &&
+    a.y + aSize > b.y
   );
 }
 
@@ -242,9 +282,35 @@ function updatePlayer(delta) {
 
 function updateObstacles(delta) {
   const slowFactor = slowTimer > 0 ? SLOW_EFFECT_MULTIPLIER : 1;
+
   for (const ob of obstacles) {
-    ob.y += Math.min(ob.speed, MAX_SPEED + (wave - 1) * 25) * slowFactor * delta;
+    const fall = Math.min(ob.speed, MAX_SPEED + (wave - 1) * 25) * slowFactor * delta;
+    ob.y += fall;
+
+    if (ob.type === "tracking") {
+      const playerCenterX = player.x + PLAYER_SIZE * 0.5;
+      const obstacleCenterX = ob.x + ob.size * 0.5;
+      const steer = (playerCenterX - obstacleCenterX) * TRACKING_STEER * delta;
+      ob.x += clamp(steer, -120 * delta, 120 * delta);
+    } else if (ob.type === "bouncing" || ob.type === "split-child") {
+      ob.x += ob.vx * delta;
+      if (ob.x <= 0 || ob.x >= areaWidth - ob.size) {
+        ob.x = clamp(ob.x, 0, areaWidth - ob.size);
+        ob.vx *= -1;
+      }
+    } else if (ob.type === "splitter" && !ob.hasSplit && ob.y >= ob.splitAtY) {
+      ob.hasSplit = true;
+      const childSpeed = ob.speed * 0.88;
+      createSplitChild(ob.x - 6, ob.y, childSpeed, -110);
+      createSplitChild(ob.x + 6, ob.y, childSpeed, 110);
+      ob.el.remove();
+      ob._removed = true;
+    }
+
+    ob.x = clamp(ob.x, 0, areaWidth - ob.size);
   }
+
+  obstacles = obstacles.filter((ob) => !ob._removed);
 }
 
 function updateDifficulty(delta) {

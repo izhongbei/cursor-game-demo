@@ -147,6 +147,28 @@ body {
     0 0 26px rgb(255 93 122 / 26%);
 }
 
+.obstacle.tracking {
+  border: 1px solid rgb(99 230 255 / 70%);
+  box-shadow:
+    0 0 14px rgb(99 230 255 / 46%),
+    0 0 26px rgb(99 230 255 / 20%);
+}
+
+.obstacle.bouncing {
+  border: 1px solid rgb(255 236 170 / 80%);
+  background: radial-gradient(circle at 35% 35%, #fff4cf 0%, #ffbe4d 58%, #9f5d0f 100%);
+}
+
+.obstacle.splitter {
+  border: 1px solid rgb(210 170 255 / 85%);
+  background: radial-gradient(circle at 35% 35%, #f3d6ff 0%, #c47cff 58%, #6f2ba8 100%);
+}
+
+.obstacle.split-child {
+  border: 1px solid rgb(249 189 255 / 75%);
+  background: radial-gradient(circle at 35% 35%, #ffd8ff 0%, #f08bff 58%, #8f2faa 100%);
+}
+
 .powerup {
   position: absolute;
   width: 22px;
