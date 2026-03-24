@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2f3dbf"/>
+      <stop offset="100%" stop-color="#8c4bd9"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="200" rx="18" fill="url(#sky)"/>
+  <circle cx="58" cy="50" r="22" fill="#ffe39b"/>
+  <polygon points="0,162 58,92 118,162" fill="#4150b8"/>
+  <polygon points="68,162 144,76 226,162" fill="#3646a8"/>
+  <polygon points="162,162 244,84 320,162" fill="#2b3a95"/>
+  <rect y="162" width="320" height="38" fill="#1a235f"/>
+  <path d="M0 176c30-8 44-8 74 0s44 8 74 0 44-8 74 0 44 8 74 0" stroke="#4ce1ff" stroke-width="4" fill="none"/>
+  <text x="16" y="30" fill="#d8e6ff" font-family="Arial" font-size="18" font-weight="700">ANIME CITY SCENE</text>
+</svg>

@@ -1,35 +1,59 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
+本文件记录项目的重要变更，按日期和类型组织，便于追踪迭代。
 
-## 2026-03-24
+## [2026-03-24]
 
 ### Added
 
-- Added a left-side in-game guide panel with:
-  - Controls (move, dash, fire, pause)
-  - Power-up descriptions (shield, slow, double score)
-  - Enemy and boss behavior summary
-- Added multi-shot shooting requirement and implementation:
-  - One trigger now fires multiple bullets in a spread pattern
-- Added hold-to-fire behavior:
-  - Holding `J` continuously fires bullets with cooldown pacing
-- Added directional shooting support:
-  - Forward, front-left, and front-right trajectories
+- **战斗系统扩展**
+  - 新增主动攻击系统（子弹发射与命中消灭敌人）
+  - 新增多方向弹道（正前 / 左前 / 右前）
+  - 新增多弹散射（单次开火多颗子弹）
+  - 新增长按 `J` 持续连发能力（保留射速限制）
+
+- **玩法机制扩展**
+  - 新增技能系统：冲刺与护盾
+  - 新增道具系统：减速、双倍分
+  - 新增波次机制：每 20 秒升级
+  - 新增敌人行为分层：追踪球、弹跳球、分裂球
+  - 新增 Boss 事件（弹幕模式 / 旋转激光区）
+  - 新增反馈机制：连击音效、低血红晕、慢动作预警、屏幕震动
+
+- **界面与内容**
+  - 新增左侧游戏说明面板（操作、道具、敌人与 Boss 说明）
+  - 新增动漫主题图资源：
+    - `anime-hero.svg`
+    - `anime-enemy.svg`
+    - `anime-scene.svg`
+  - 新增并维护 `start.bat` 一键启动脚本
 
 ### Changed
 
-- Upgraded visual presentation to a 3D-style gameplay mode:
-  - Perspective camera feel in the playfield
-  - Depth-based transform and scaling for player, enemies, power-ups, bullets, and portals
-  - Slight scene tilt for stronger spatial perception
-- Increased bullet speed to approximately 2x of the previous baseline.
+- **视觉表现升级**
+  - 游戏由 2D 观感升级为 3D 风格展示：
+    - 场景透视与倾斜增强
+    - 角色、敌人、道具、子弹、传送门采用深度缩放与 `translate3d`
+    - 加强景深层次，提升立体感
+  - 敌方球体增加旋转动效，强化动态表现
+
+- **战斗参数调整**
+  - 子弹速度提升为上一阶段约 `2x`
+  - 连发与多发在原有冷却体系下协同工作
+
+### Fixed
+
+- 修复“按键已触发但无法发射子弹”的问题：
+  - 输入事件正常接收
+  - 子弹创建、更新、渲染、命中链路完整接入主循环
+  - 命中后可正确消灭敌人并触发分数变化
 
 ### Docs
 
-- Updated `Readme.md` to reflect:
-  - Multi-shot requirement
-  - Continuous fire by holding `J`
-  - Three-direction firing
-  - 2x bullet speed
-  - 3D mode adjustment and current gameplay description
+- `Readme.md` 从需求草稿升级为完整项目说明文档（快速开始、操作说明、玩法系统、验收标准、后续方向）
+- 文档持续同步新增需求：
+  - 三方向发射
+  - 多弹散射
+  - 长按 `J` 持续连发
+  - 子弹速度提升
+  - 3D 模式描述

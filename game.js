@@ -178,10 +178,12 @@ function clamp(value, min, max) {
 
 function to3dTransform(x, y, size) {
   const depthRatio = clamp(y / Math.max(1, areaHeight), 0, 1);
-  const scale = 0.72 + depthRatio * 0.58;
-  const lift = (1 - depthRatio) * 26;
-  const z = (depthRatio - 0.5) * 120;
-  return `translate3d(${x}px, ${y - lift}px, ${z}px) scale(${scale})`;
+  const scale = 0.5 + depthRatio * 0.95;
+  const lift = (1 - depthRatio) * 48;
+  const z = (depthRatio - 0.5) * 260;
+  const tilt = (0.5 - depthRatio) * 18;
+  const yaw = ((x / Math.max(1, areaWidth)) - 0.5) * 12;
+  return `translate3d(${x}px, ${y - lift}px, ${z}px) rotateX(${tilt}deg) rotateY(${yaw}deg) scale(${scale})`;
 }
 
 function randomRange(min, max) {

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2f0f2f"/>
+      <stop offset="100%" stop-color="#5b1a39"/>
+    </linearGradient>
+    <linearGradient id="hair2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffb3d9"/>
+      <stop offset="100%" stop-color="#ff598a"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="200" rx="18" fill="url(#bg2)"/>
+  <circle cx="160" cy="95" r="46" fill="#ffd9ce"/>
+  <path d="M108 94c8-36 34-56 52-56 20 0 44 18 56 52-20-8-34-12-56-12s-34 4-52 16z" fill="url(#hair2)"/>
+  <ellipse cx="144" cy="97" rx="7" ry="8" fill="#3f1736"/>
+  <ellipse cx="178" cy="97" rx="7" ry="8" fill="#3f1736"/>
+  <path d="M140 121c10-4 30-4 40 0" stroke="#8c1538" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M118 160c10-20 24-28 42-28s30 8 42 28" fill="#ff5d7a"/>
+  <text x="18" y="30" fill="#ffd2e8" font-family="Arial" font-size="18" font-weight="700">ANIME ENEMY</text>
+</svg>
