@@ -50,7 +50,9 @@ const BOSS_DURATION = 10;
 const SLOWMO_DURATION = 0.1;
 const COMBO_WINDOW = 2.2;
 const BULLET_SIZE = 8;
-const BULLET_SPEED = 620;
+const BULLET_SPEED = 1240;
+const BULLET_SIDE_FACTOR = 0.55;
+const BULLET_OUTER_SIDE_FACTOR = 1.05;
 const FIRE_COOLDOWN = 0.18;
 const KILL_SCORE = 8;
 
@@ -238,12 +240,18 @@ function renderPowerups() {
   }
 }
 
-function createBullet() {
+function createBullet(directionX = 0) {
+  const directionY = -1;
+  const length = Math.hypot(directionX, directionY);
+  const nx = directionX / length;
+  const ny = directionY / length;
   const bullet = {
     id: crypto.randomUUID(),
     x: player.x + PLAYER_SIZE * 0.5 - BULLET_SIZE * 0.5,
     y: player.y - BULLET_SIZE - 2,
-    size: BULLET_SIZE
+    size: BULLET_SIZE,
+    vx: nx * BULLET_SPEED,
+    vy: ny * BULLET_SPEED
   };
   const el = document.createElement("div");
   el.className = "bullet";
@@ -254,8 +262,9 @@ function createBullet() {
 
 function updateBullets(delta) {
   for (const bullet of bullets) {
-    bullet.y -= BULLET_SPEED * delta;
-    if (bullet.y < -bullet.size - 10) {
+    bullet.x += bullet.vx * delta;
+    bullet.y += bullet.vy * delta;
+    if (bullet.y < -bullet.size - 10 || bullet.x < -bullet.size - 10 || bullet.x > areaWidth + bullet.size + 10) {
       bullet._removed = true;
       bullet.el.remove();
     }
@@ -570,7 +579,11 @@ function tryFire(event) {
   if (fireCooldownTimer > 0) {
     return;
   }
-  createBullet();
+  createBullet(0);
+  createBullet(-BULLET_SIDE_FACTOR);
+  createBullet(BULLET_SIDE_FACTOR);
+  createBullet(-BULLET_OUTER_SIDE_FACTOR);
+  createBullet(BULLET_OUTER_SIDE_FACTOR);
   fireCooldownTimer = FIRE_COOLDOWN;
   playBeep(760, 0.03, 0.012);
 }
