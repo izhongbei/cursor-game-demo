@@ -176,6 +176,14 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function to3dTransform(x, y, size) {
+  const depthRatio = clamp(y / Math.max(1, areaHeight), 0, 1);
+  const scale = 0.72 + depthRatio * 0.58;
+  const lift = (1 - depthRatio) * 26;
+  const z = (depthRatio - 0.5) * 120;
+  return `translate3d(${x}px, ${y - lift}px, ${z}px) scale(${scale})`;
+}
+
 function randomRange(min, max) {
   return min + Math.random() * (max - min);
 }
@@ -339,7 +347,7 @@ function resetPlayer() {
 }
 
 function renderPlayer() {
-  playerEl.style.transform = `translate(${player.x}px, ${player.y}px)`;
+  playerEl.style.transform = to3dTransform(player.x, player.y, PLAYER_SIZE);
   playerEl.classList.toggle("shielded", shieldCount > 0);
   playerEl.classList.toggle("dashing", dashTimer > 0);
 }
@@ -401,7 +409,7 @@ function createSplitChild(x, y, speed, vx) {
 
 function renderObstacles() {
   for (const ob of obstacles) {
-    ob.el.style.transform = `translate(${ob.x}px, ${ob.y}px)`;
+    ob.el.style.transform = to3dTransform(ob.x, ob.y, ob.size);
   }
 }
 
@@ -444,13 +452,13 @@ function maybeSpawnPortal(delta) {
 
 function renderPowerups() {
   for (const item of powerups) {
-    item.el.style.transform = `translate(${item.x}px, ${item.y}px)`;
+    item.el.style.transform = to3dTransform(item.x, item.y, item.size);
   }
 }
 
 function renderPortals() {
   for (const p of portals) {
-    p.el.style.transform = `translate(${p.x}px, ${p.y}px)`;
+    p.el.style.transform = to3dTransform(p.x, p.y, p.size);
   }
 }
 
@@ -492,7 +500,7 @@ function updateBullets(delta) {
 
 function renderBullets() {
   for (const bullet of bullets) {
-    bullet.el.style.transform = `translate(${bullet.x}px, ${bullet.y}px)`;
+    bullet.el.style.transform = to3dTransform(bullet.x, bullet.y, bullet.size);
   }
 }
 

@@ -136,7 +136,9 @@ body {
   box-shadow:
     inset 0 0 38px rgb(0 0 0 / 35%),
     0 0 30px rgb(99 230 255 / 12%);
-  transform: translate(0, 0);
+  perspective: 950px;
+  transform-style: preserve-3d;
+  transform: rotateX(11deg) translate(0, 0);
 }
 
 .game-area.fever {
@@ -220,6 +222,8 @@ body {
   box-shadow:
     0 0 18px rgb(102 245 142 / 50%),
     0 0 34px rgb(102 245 142 / 20%);
+  transform-origin: center bottom;
+  will-change: transform;
 }
 
 .obstacle {
@@ -231,6 +235,8 @@ body {
   box-shadow:
     0 0 14px rgb(255 93 122 / 56%),
     0 0 26px rgb(255 93 122 / 26%);
+  transform-origin: center bottom;
+  will-change: transform;
 }
 
 .obstacle.tracking {
@@ -261,6 +267,8 @@ body {
   height: 22px;
   border-radius: 50%;
   box-shadow: 0 0 16px rgb(255 255 255 / 16%);
+  transform-origin: center bottom;
+  will-change: transform;
 }
 
 .powerup.shield {
@@ -287,6 +295,8 @@ body {
     0 0 12px rgb(167 122 255 / 55%),
     0 0 26px rgb(96 221 255 / 38%);
   animation: portal-spin 1.25s linear infinite;
+  transform-origin: center bottom;
+  will-change: transform;
 }
 
 .bullet {
@@ -304,6 +314,8 @@ body {
   box-shadow:
     0 0 10px hsl(var(--bullet-hue) 100% 72% / 60%),
     0 0 18px hsl(var(--bullet-hue) 100% 64% / 28%);
+  transform-origin: center bottom;
+  will-change: transform;
 }
 
 .pause-btn {
