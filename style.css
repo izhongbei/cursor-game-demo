@@ -51,6 +51,7 @@ body {
 .stats {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 8px;
   margin-bottom: 12px;
   font-size: 14px;
@@ -96,9 +97,24 @@ body {
   position: absolute;
   width: 24px;
   height: 24px;
-  border-radius: 4px;
+  border-radius: 50%;
   background: var(--obstacle);
   box-shadow: 0 0 10px color-mix(in srgb, var(--obstacle) 70%, #000 30%);
+}
+
+.pause-btn {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #20284a;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pause-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .overlay {

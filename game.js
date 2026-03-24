@@ -3,6 +3,7 @@ const playerEl = document.getElementById("player");
 const overlayEl = document.getElementById("overlay");
 const overlayTextEl = document.getElementById("overlay-text");
 const startBtn = document.getElementById("start-btn");
+const pauseBtn = document.getElementById("pause-btn");
 const scoreEl = document.getElementById("score");
 const bestScoreEl = document.getElementById("best-score");
 const statusEl = document.getElementById("status");
@@ -181,6 +182,8 @@ function clearObstacles() {
 function endGame() {
   gameState = "ended";
   setStatus("已结束");
+  pauseBtn.disabled = true;
+  pauseBtn.textContent = "暂停";
 
   const finalScore = Math.floor(score);
   if (finalScore > bestScore) {
@@ -231,15 +234,48 @@ function startGame() {
   hideOverlay();
   setStatus("进行中");
   gameState = "running";
+  pauseBtn.disabled = false;
+  pauseBtn.textContent = "暂停";
 
   requestAnimationFrame(gameLoop);
 }
 
 function tryStartBySpace(event) {
   if (event.code !== "Space") return;
-  if (gameState === "running") return;
   event.preventDefault();
-  startGame();
+  if (gameState === "idle" || gameState === "ended") {
+    startGame();
+    return;
+  }
+  if (gameState === "paused") {
+    resumeGame();
+  }
+}
+
+function pauseGame() {
+  if (gameState !== "running") return;
+  gameState = "paused";
+  setStatus("已暂停");
+  pauseBtn.textContent = "继续";
+}
+
+function resumeGame() {
+  if (gameState !== "paused") return;
+  gameState = "running";
+  setStatus("进行中");
+  pauseBtn.textContent = "暂停";
+  lastTime = 0;
+  requestAnimationFrame(gameLoop);
+}
+
+function togglePause() {
+  if (gameState === "running") {
+    pauseGame();
+    return;
+  }
+  if (gameState === "paused") {
+    resumeGame();
+  }
 }
 
 window.addEventListener("keydown", (event) => {
@@ -264,6 +300,7 @@ window.addEventListener("resize", () => {
 });
 
 startBtn.addEventListener("click", startGame);
+pauseBtn.addEventListener("click", togglePause);
 
 updateAreaSize();
 resetPlayer();
