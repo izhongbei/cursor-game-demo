@@ -28,16 +28,16 @@ const feverBtn = document.getElementById("fever-btn");
 
 const PLAYER_SIZE = 28;
 const OBSTACLE_SIZE = 24;
-const BASE_SPEED = 170;
-const MAX_SPEED = 360;
+const BASE_SPEED = 140;
+const MAX_SPEED = 300;
 const SCORE_RATE = 10;
 const BASE_TARGET_OBSTACLES = 3;
 const TARGET_OBSTACLE_GROWTH = 0.25;
 const MAX_TARGET_OBSTACLES = 12;
-const WAVE_DURATION = 20;
-const WAVE_SPEED_STEP = 18;
-const WAVE_SPAWN_STEP = 0.06;
-const WAVE_TARGET_STEP = 1;
+const WAVE_DURATION = 25;
+const WAVE_SPEED_STEP = 12;
+const WAVE_SPAWN_STEP = 0.04;
+const WAVE_TARGET_STEP = 0.8;
 const TRACKING_STEER = 2.4;
 const BOUNCE_VX_MAX = 150;
 const SPLIT_TRIGGER_Y_RATIO = 0.38;
@@ -45,13 +45,13 @@ const SPLIT_TRIGGER_Y_RATIO = 0.38;
 const DASH_MULTIPLIER = 2.4;
 const DASH_DURATION = 0.22;
 const DASH_COOLDOWN = 3.5;
-const MAX_SHIELD_COUNT = 3;
+const MAX_SHIELD_COUNT = 5;
 
 const POWERUP_SIZE = 22;
 const PORTAL_SIZE = 34;
 const POWERUP_LIFETIME = 8;
-const POWERUP_SPAWN_MIN = 7;
-const POWERUP_SPAWN_MAX = 11;
+const POWERUP_SPAWN_MIN = 5;
+const POWERUP_SPAWN_MAX = 9;
 const PORTAL_SPAWN_MIN = 18;
 const PORTAL_SPAWN_MAX = 28;
 const PORTAL_LIFETIME = 7;
@@ -59,19 +59,19 @@ const SLOW_EFFECT_DURATION = 5;
 const SLOW_EFFECT_MULTIPLIER = 0.55;
 const DOUBLE_SCORE_DURATION = 6;
 
-const BOSS_INTERVAL = 60;
-const BOSS_DURATION = 10;
+const BOSS_INTERVAL = 90;
+const BOSS_DURATION = 8;
 const SLOWMO_DURATION = 0.1;
 const COMBO_WINDOW = 2.2;
 const BULLET_SIZE = 8;
 const BULLET_SPEED = 1240;
 const BULLET_SIDE_FACTOR = 0.55;
 const BULLET_OUTER_SIDE_FACTOR = 1.05;
-const FIRE_COOLDOWN = 0.18;
-const KILL_SCORE = 8;
-const CRIT_CHANCE = 0.2;
+const FIRE_COOLDOWN = 0.14;
+const KILL_SCORE = 12;
+const CRIT_CHANCE = 0.28;
 const CRIT_MULTIPLIER = 2.2;
-const NORMAL_MODE_TARGET_TIME = 120;
+const NORMAL_MODE_TARGET_TIME = 90;
 const LEADERBOARD_LIMIT = 6;
 const MAX_ACHIEVEMENT_TOAST_MS = 2200;
 const GAME_STORAGE_KEY = "avoid-block-game-save-v2";
@@ -82,12 +82,12 @@ const FEVER_SCORE_MULTIPLIER = 1.6;
 const MANUAL_FEVER_COOLDOWN = 18;
 
 const ACHIEVEMENT_META = [
-  { id: "first-kill", title: "初次击破", desc: "首次击毁障碍物" },
+  { id: "first-kill", title: "初次成功", desc: "首次打中障碍物" },
   { id: "combo-10", title: "连击新星", desc: "达成 10 连击" },
   { id: "shield-master", title: "护盾达人", desc: "单局叠到 3 层护盾" },
   { id: "score-500", title: "500分俱乐部", desc: "单局达到 500 分" },
   { id: "survive-120", title: "坚韧生还", desc: "生存达到 120 秒" },
-  { id: "endless-score-800", title: "无尽征服者", desc: "无尽模式达到 800 分" }
+  { id: "endless-score-800", title: "无尽小勇士", desc: "无尽模式达到 800 分" }
 ];
 
 let gameState = "idle";
@@ -824,7 +824,7 @@ function endGame(customText = "") {
     bestScoreEl.textContent = String(bestScore);
   }
   pushEndlessRecord(finalScore);
-  const defaultText = customText || `游戏结束！最终得分：${finalScore}`;
+  const defaultText = customText || `本局结束！最终得分：${finalScore}`;
   showOverlay(`${defaultText}（${selectedMode === "endless" ? "无尽" : "标准"}）`);
 }
 
