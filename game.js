@@ -52,6 +52,7 @@ const COMBO_WINDOW = 2.2;
 const BULLET_SIZE = 8;
 const BULLET_SPEED = 1240;
 const BULLET_SIDE_FACTOR = 0.55;
+const BULLET_OUTER_SIDE_FACTOR = 1.05;
 const FIRE_COOLDOWN = 0.18;
 const KILL_SCORE = 8;
 
@@ -581,6 +582,8 @@ function tryFire(event) {
   createBullet(0);
   createBullet(-BULLET_SIDE_FACTOR);
   createBullet(BULLET_SIDE_FACTOR);
+  createBullet(-BULLET_OUTER_SIDE_FACTOR);
+  createBullet(BULLET_OUTER_SIDE_FACTOR);
   fireCooldownTimer = FIRE_COOLDOWN;
   playBeep(760, 0.03, 0.012);
 }
